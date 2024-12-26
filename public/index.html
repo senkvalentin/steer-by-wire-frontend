@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECO Functions</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a, #1c1c1c);
+            color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+        h1 {
+            font-size: 36px;
+            margin-bottom: 30px;
+        }
+        .button {
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 18px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        #sport { background-color: crimson; }
+        #comfort { background-color: darkturquoise; }
+        #offroad { background-color: saddlebrown; }
+        #custom { background-color: limegreen; }
+
+        /* Hover effect for buttons */
+        .button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .button i {
+            margin-right: 10px;
+            font-size: 24px;
+        }
+
+        .slider-container {
+            display: none;
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .slider {
+            margin: 10px 0;
+        }
+
+        .slider input {
+            width: 300px;
+            height: 8px;
+            background: #444;
+            border-radius: 10px;
+            outline: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .slider input:focus {
+            background: #aaa;
+        }
+
+        .slider label {
+            font-size: 18px;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 10px;
+            background-color: #333;
+            color: #fff;
+            display: inline-block;
+            min-width: 300px;
+            text-align: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .status.show {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Media query for responsiveness */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 28px;
+            }
+            .button {
+                width: 180px;
+                font-size: 16px;
+            }
+            .slider input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Drive-Modes:</h1>
+    <button class="button" id="sport" onclick="sendButton('Sport-Mode')">
+        <i class="fas fa-tachometer-alt"></i> Sport Mode
+    </button>
+    <button class="button" id="comfort" onclick="sendButton('Comfort-Mode')">
+        <i class="fas fa-cogs"></i> Comfort Mode
+    </button>
+    <button class="button" id="offroad" onclick="sendButton('Offroad-Mode')">
+        <i class="fas fa-road"></i> Offroad Mode
+    </button>
+    <button class="button" id="custom" onclick="toggleSliders()">
+        <i class="fas fa-sliders-h"></i> Custom Mode
+    </button>
+
+    <div id="sliders" class="slider-container">
+        <div class="slider">
+            <label for="slider1">Slider 1:</label>
+            <input type="range" id="slider1" min="-2" max="2" step="0.01" value="0" oninput="updateSlider('Schieberegler 1', this.value)">
+        </div>
+        <div class="slider">
+            <label for="slider2">Slider 2:</label>
+            <input type="range" id="slider2" min="-2" max="2" step="0.01" value="0" oninput="updateSlider('Schieberegler 2', this.value)">
+        </div>
+    </div>
+
+    <div id="status" class="status"></div>
+
+    <script>
+        const API_URL = "http://localhost:3000";
+        const statusElement = document.getElementById("status");
+
+        function showStatus(message, isError = false) {
+            statusElement.textContent = message;
+            statusElement.style.backgroundColor = isError ? "crimson" : "#333";
+            statusElement.classList.add("show");
+
+            setTimeout(() => {
+                statusElement.classList.remove("show");
+            }, 3000);
+        }
+
+        async function sendButton(message) {
+            try {
+                const response = await fetch(`${API_URL}/button`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ message })
+                });
+                const result = await response.text();
+                showStatus(`Mode changed to: ${message}`);
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, true);
+            }
+        }
+
+        async function updateSlider(identifier, value) {
+            try {
+                const response = await fetch(`${API_URL}/slider`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ identifier, value })
+                });
+                const result = await response.text();
+                console.log(`${identifier} updated: ${value}`);
+                showStatus(`${identifier} updated to: ${value}`);
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, true);
+            }
+        }
+
+        function toggleSliders() {
+            const sliders = document.getElementById("sliders");
+            sliders.style.display = sliders.style.display === "none" ? "block" : "none";
+            showStatus("Custom sliders toggled.");
+        }
+    </script>
+</body>
+</html>
